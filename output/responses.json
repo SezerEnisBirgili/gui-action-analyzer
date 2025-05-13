@@ -1,0 +1,62 @@
+[
+    {
+        "image_id": "1",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"\u0130stanbul Anadolu\"."
+    },
+    {
+        "image_id": "2",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"Sabiha G\u00f6k\u00e7en Havaliman\u0131 (SAW)\"."
+    },
+    {
+        "image_id": "3",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"Nereye\" (\u0130zmir)."
+    },
+    {
+        "image_id": "4",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"\u0130zmir Adnan Menderes Havaliman\u0131 (ADB)\"."
+    },
+    {
+        "image_id": "5",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"Gidi\u015f Tarihi 15 May Per\u015fembe\"."
+    },
+    {
+        "image_id": "6",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on the right arrow in the calendar."
+    },
+    {
+        "image_id": "7",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"11 Haz\"."
+    },
+    {
+        "image_id": "8",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on \"D\u00f6n\u00fc\u015f Ekle\""
+    },
+    {
+        "image_id": "10",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on the right arrow in the calendar."
+    },
+    {
+        "image_id": "11",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on the \"14 A\u011fustos 2025\" date in the calendar."
+    },
+    {
+        "image_id": "12",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on \"Yolcular 1 Yolcu\"."
+    },
+    {
+        "image_id": "13",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Click on the \"plus\" button next to \"Yeti\u015fkin\"."
+    }
+]
