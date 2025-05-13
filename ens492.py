@@ -6,13 +6,13 @@ from dotenv import load_dotenv
 
 # Every action must be coupled with the associated annotated image.
 # Each image is numbered according to its action.
-image_dir = r"D:\test\ens492\images"
+image_dir = r"images"
 
 # Each line is an action with a associated image.
-txt_file = r"D:\test\ens492\images\actions.txt"
+txt_file = r"images\actions.txt"
 
 # The extracted actions will be here
-response_file = r"D:\test\ens492\output\responses.json"
+response_file = r"output\responses.json"
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 print("OpenAI client initialized.")
