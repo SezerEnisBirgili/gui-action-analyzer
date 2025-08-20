@@ -1,0 +1,4 @@
+1 {"action":"click"}
+2 {"action":"enter", "argument": "chair"}
+3 {"action":"click"}
+4 {"action":"click"}

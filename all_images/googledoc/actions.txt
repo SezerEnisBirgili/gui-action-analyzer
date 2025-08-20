@@ -1,0 +1,7 @@
+1 {"action":"click"}
+2 {"action":"enter", "argument": "document1"}
+3 {"action":"click"}
+4 {"action":"enter", "argument": "this is a document."}
+5 {"action":"clickDrag"}
+6 {"action":"click"}
+7 {"action":"click"}

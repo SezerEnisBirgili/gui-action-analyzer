@@ -2,61 +2,31 @@
     {
         "image_id": "1",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"\u0130stanbul Anadolu\"."
+        "response": "click on Trending"
     },
     {
         "image_id": "2",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"Sabiha G\u00f6k\u00e7en Havaliman\u0131 (SAW)\"."
+        "response": "click on the video titled \"Trabzonspor 0-3 Galatasaray | MA\u00c7 \u00d6ZET\u0130 | Ziraat T\u00fcrkiye Kupas\u0131 Final Ma\u00e7\u0131 | 14.05.2025\" in the Trending section on YouTube."
     },
     {
         "image_id": "3",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"Nereye\" (\u0130zmir)."
+        "response": "click on the play button"
     },
     {
         "image_id": "4",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"\u0130zmir Adnan Menderes Havaliman\u0131 (ADB)\"."
+        "response": "click on the settings icon"
     },
     {
         "image_id": "5",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"Gidi\u015f Tarihi 15 May Per\u015fembe\"."
+        "response": "click on Subtitles/CC (1)"
     },
     {
         "image_id": "6",
         "prompt": "{\"action\":\"click\"}",
-        "response": "Click on the right arrow in the calendar."
-    },
-    {
-        "image_id": "7",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"11 Haz\"."
-    },
-    {
-        "image_id": "8",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "click on \"D\u00f6n\u00fc\u015f Ekle\""
-    },
-    {
-        "image_id": "10",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "Click on the right arrow in the calendar."
-    },
-    {
-        "image_id": "11",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "Click on the \"14 A\u011fustos 2025\" date in the calendar."
-    },
-    {
-        "image_id": "12",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "Click on \"Yolcular 1 Yolcu\"."
-    },
-    {
-        "image_id": "13",
-        "prompt": "{\"action\":\"click\"}",
-        "response": "Click on the \"plus\" button next to \"Yeti\u015fkin\"."
+        "response": "click on \"Turkish (auto-generated)\" as the subtitles/CC options"
     }
 ]

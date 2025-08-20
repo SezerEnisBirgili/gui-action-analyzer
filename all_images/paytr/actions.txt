@@ -1,0 +1,8 @@
+1 {"action":"enter", "argument": "Ahmet"}
+2 {"action":"enter", "argument": "Soyadoğlu"}
+3 {"action":"enter", "argument": "ahmetnotreal@gmail.com"}
+4 {"action":"enter", "argument": "ahmetweb.com"}
+5 {"action":"enter", "argument": "053344567864"}
+6 {"action":"enter", "argument": "accounting"}
+7 {"action":"click"}
+8 {"action":"click"}

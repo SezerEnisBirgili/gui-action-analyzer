@@ -1,0 +1,6 @@
+1 {"action":"click"}
+2 {"action":"enter", "argument": "can you tell a story?"}
+3 {"action":"click"}
+4 {"action":"enter", "argument": "tell a story in 10 sentences"}
+5 {"action":"click"}
+6 {"action":"enter", "argument": "what is the moral of the story?"}
