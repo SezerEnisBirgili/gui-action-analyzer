@@ -14,11 +14,11 @@ txt_file = r"images\actions.txt"
 # The extracted actions will be here
 response_file = r"output\responses.json"
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-print("OpenAI client initialized.")
-
 # provide a .env file with OPENAI_API_KEY specified in it
 load_dotenv("./py.env")
+
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+print("OpenAI client initialized.")
 
 def analyze_images(image_dir, txt_file, response_file):
 
