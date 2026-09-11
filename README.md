@@ -1,6 +1,6 @@
 # GUI Action Analyzer
 
-A pipeline that turns a sequence of **annotated GUI screenshots** into a plain-language narrative of what a user did. Built as part of an ENS491/492 project. It uses an OpenAI-compatible model (`gpt-4o-mini` by default, swappable) across four stages: per-action description, action grouping, recursive summarization, and high-level intent summarization.
+A pipeline that turns a sequence of annotated GUI screenshots into a plain-language narrative of what a user did. Built as part of an ENS491/492 project. It uses an OpenAI-compatible model (`gpt-4o-mini` by default, swappable) across four stages: per-action description, action grouping, recursive summarization, and high-level intent summarization.
 
 Each screenshot is stored locally alongside a short caption describing the action taken on it (`images/actions.txt`), so every image on disk has a matching one-line annotation the model can be prompted with.
 
@@ -8,10 +8,8 @@ Each screenshot is stored locally alongside a short caption describing the actio
 
 **Screenshots + Action Captions → Per-Action Description → Action Grouping (recursive) → Intent Summary**
 
-## How It Works
-
-### 1. Per-image action extraction — `analyze_images()`
-- Reads `images/actions.txt`, where each line pairs an image ID with a short JSON-style caption of the action taken on that screenshot, e.g.:
+### 1. Per-image action extraction 
+`analyze_images()` reads `images/actions.txt`, where each line pairs an image ID with a short JSON-style caption of the action taken on that screenshot, e.g.:
   ```
   1 {"action":"click"}
   2 {"action":"click"}
@@ -20,8 +18,11 @@ Each screenshot is stored locally alongside a short caption describing the actio
   13 {"action":"click"}
   ```
   (entries can also be `{"action":"entry", "argument": "..."}` for typed input, e.g. `{"action":"enter", "argument": "what is the time?"}`)
-- For each line, loads the matching screenshot `images/<image_id>.png` — a screenshot with a bounding box drawn around the GUI element the user interacted with. Screenshots and their captions live together locally in `images/`, so `1.png` pairs with the `1 ...` line, `2.png` with the `2 ...` line, and so on.
-- Sends the image + the line's caption to `gpt-4o-mini` with a system prompt instructing it to output a structured natural-language description of the action, e.g.:
+  
+For each line, loads the matching screenshot `images/<image_id>.png` — a screenshot with a bounding box drawn around the GUI element the user interacted with. Screenshots and their captions live together locally in `images/`, so `1.png` pairs with the `1 ...` line, `2.png` with the `2 ...` line, and so on.
+
+  
+Sends the image + the line's caption to `gpt-4o-mini` with a system prompt instructing it to output a structured natural-language description of the action, e.g.:
   - `click on <GUI element>`
   - `enter <argument> as <GUI element>`
   - or, if the target element is ambiguous (e.g. duplicate labels on screen), a context-qualified version: `Within the context of <context>, click on <GUI element>.`
@@ -61,22 +62,21 @@ Each screenshot is stored locally alongside a short caption describing the actio
   ]
   ```
 
-### 2. Load extracted actions — `read_json()`
-- Reads `responses.json` and concatenates every `response` field into one newline-separated string.
+### 2. Load extracted actions
+`read_json()` reads `responses.json` and concatenates every `response` field into one newline-separated string.
 
-### 3. Group actions into a story — `action_groups()`
-- Sends the concatenated action list to `gpt-4o-mini`, asking it to cluster the actions into logical, continuous groups and name each group using specific details (names, places, dates, counts) pulled from the underlying actions.
-- Parses the model's JSON array response and returns just the group names.
-- This grouping step runs **recursively**: if there are still more than 10 groups, the group names are fed back through `action_groups()` again — summarizing the summaries — until the list is short enough, or up to 10 attempts have been made.
+### 3. Group actions into a story
+`action_groups()` ends the concatenated action list to the model, asking it to cluster the actions into logical, continuous groups and name each group using specific details (names, places, dates, counts) pulled from the underlying actions. Subsequently, it parses the model's JSON array response and returns just the group names.
 
-### 4. Summarize user intent — `analyze_user_actions()`
-- Sends the list of action-group names to `gpt-4o-mini` and asks it to interpret, in a paragraph, what the user was doing overall.
-- Prints the final summary to the console.
+This grouping step runs recursively as long as there are still more than 10 groups, the group names are fed back into the pipeline through `action_groups()` to summarize the summaries until the list is short enough, or up to 10 attempts have been made.
+
+### 4. Summarize user intent
+`analyze_user_actions()` sends the list of action-group names to the model and asks it to interpret, in a paragraph, what the user was doing overall and prints the final summary to the console.
 
 ## Requirements
 
 - Python 3.9+
-- An OpenAI API key with access to `gpt-4o-mini` (not required when pointing `--base-url` at a local model server)
+- An OpenAI API key with access to `gpt-4o-mini` (not required when pointing `--base-url` at a local model server, see [Running a local model](#running-a-local-model))
 - Python packages:
   ```
   pip install openai python-dotenv
@@ -119,7 +119,7 @@ project/
    3 {"action":"enter", "argument": "what is the time?"}
    ...
    ```
-4. Make sure an `output/` directory exists (or that the script is allowed to create one).
+4. An `output/` directory will be created if there isn't one.
 
 ## Usage
 
@@ -129,20 +129,20 @@ python main.py
 
 This will:
 1. Analyze every image/action pair and save results to `output/responses.json`.
-2. Group the resulting action descriptions (recursively re-summarizing until short enough).
-3. Print a natural-language paragraph describing the overall user session.
+2. Group the resulting action descriptions recursively re-summarizing until it is short enough.
+3. Print a paragraph describing the overall user intent and actions.
 
 ## Swapping the Model
 
-All three stages default to `gpt-4o-mini`, but the model is configurable in one place:
+The default model is `gpt-4o-mini`, but the model can be configured to a different OpenAI API compatible model:
 
 ```bash
 python main.py --model gpt-4o
 ```
 
-This overrides the `MODEL` constant at the top of `main.py` for every stage (image analysis, action grouping, and intent summary) in a single run.
+This overrides the `MODEL` constant at the top of `main.py` for every stage.
 
-## Running Against a Local Model
+## Running a Local Model
 
 The script talks to whatever OpenAI-compatible endpoint the client is pointed at, so it can run fully offline against a local model server (e.g. [Ollama](https://ollama.com)) instead of OpenAI's API:
 
