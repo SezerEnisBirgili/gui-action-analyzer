@@ -15,15 +15,23 @@ txt_file = r"images\actions.txt"
 # The extracted actions will be here
 response_file = r"output\responses.json"
 
+# default model
+MODEL = "gpt-4o-mini"
+
+# API endpoint. defaults to OpenAI
+# pass --base-url to point at a local server
+BASE_URL = os.environ.get("OPENAI_BASE_URL")
+
 # provide a .env file with OPENAI_API_KEY specified in it
 load_dotenv("./py.env")
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-print("OpenAI client initialized.")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "not-needed-for-local"), base_url=BASE_URL)
+print(f"OpenAI client initialized. base_url={BASE_URL or '(default)'}")
 
 import time
 
 def call_with_retry(fn, *args, retries=3, delay=2, **kwargs):
+    """Retry an OpenAI API call a few times before giving up."""
     last_error = None
     for attempt in range(1, retries + 1):
         try:
@@ -36,6 +44,8 @@ def call_with_retry(fn, *args, retries=3, delay=2, **kwargs):
     raise last_error
 
 def parse_action_line(line, line_num):
+    """Parse one line of actions.txt into (image_id, prompt_text).
+    Returns None if the line is malformed, printing which line failed."""
     parts = line.strip().split(' ', 1)
     if len(parts) < 2:
         print(f"Skipping invalid prompt on line {line_num}: {line.strip()!r}")
@@ -43,7 +53,7 @@ def parse_action_line(line, line_num):
     return parts[0], parts[1]
 
 
-def analyze_images(image_dir, txt_file, response_file):
+def analyze_images(image_dir, txt_file, response_file, model=MODEL):
 
 
     vllm_system_prompt = """
@@ -104,7 +114,7 @@ def analyze_images(image_dir, txt_file, response_file):
 
             response = call_with_retry(
                 client.chat.completions.create,
-                model="gpt-4o-mini",
+                model=model,
                 messages=[
                     {"role": "system", "content": vllm_system_prompt},
                     {"role": "user",
@@ -149,7 +159,7 @@ def read_json(response_file):
   return responses
 
 
-def action_groups(responses):
+def action_groups(responses, model=MODEL):
 
   system_prompt = """Separate the following responses into logical continuous action groups.
   In each action group name, combine information from child actions to create a story with the specific information about names, places, dates and counts preserved in the group name.
@@ -164,7 +174,7 @@ def action_groups(responses):
 
   response = call_with_retry(
     client.chat.completions.create,
-    model="gpt-4o-mini",
+    model=model,
     messages=[
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": responses}
@@ -179,7 +189,7 @@ def action_groups(responses):
 
   return action_group_names
 
-def analyze_user_actions(action_group_names):
+def analyze_user_actions(action_group_names, model=MODEL):
 
   actions = "\n".join(action_group_names)
 
@@ -188,7 +198,7 @@ def analyze_user_actions(action_group_names):
 
   response = call_with_retry(
     client.chat.completions.create,
-    model="gpt-4o-mini",
+    model=model,
     messages=[
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": actions}
@@ -200,13 +210,21 @@ def analyze_user_actions(action_group_names):
   return response_text
 
 def main():
+    global client
+
     parser = argparse.ArgumentParser(description="GUI Action Analyzer")
     parser.add_argument("--image-dir", default=image_dir, help=f"Directory containing screenshots (default: {image_dir})")
     parser.add_argument("--txt-file", default=txt_file, help=f"Path to the actions.txt caption file (default: {txt_file})")
     parser.add_argument("--response-file", default=response_file, help=f"Path to write responses.json (default: {response_file})")
+    parser.add_argument("--model", default=MODEL, help=f"OpenAI model to use for all stages (default: {MODEL})")
+    parser.add_argument("--base-url", default=BASE_URL, help="API endpoint, e.g. http://localhost:11434/v1 for Ollama (default: OpenAI's API)")
     args = parser.parse_args()
 
-    analyze_images(args.image_dir, args.txt_file, args.response_file)
+    if args.base_url != BASE_URL:
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "not-needed-for-local"), base_url=args.base_url)
+        print(f"OpenAI client re-initialized. base_url={args.base_url or '(default)'}")
+
+    analyze_images(args.image_dir, args.txt_file, args.response_file, model=args.model)
 
     extracted_actions = read_json(args.response_file)
 
@@ -215,17 +233,17 @@ def main():
 
     reduced = 0
 
-    action_group_names = action_groups(extracted_actions)
+    action_group_names = action_groups(extracted_actions, model=args.model)
 
     # reduce until less than 10 actions remain or quit after trying 10 times
     while len(action_group_names) > 10 and reduced < 10:
-        action_group_names = action_groups(extracted_actions)
+        action_group_names = action_groups(extracted_actions, model=args.model)
         reduced += 1
 
 
     print("Actions have been reduced.")
 
-    response_text = analyze_user_actions(action_group_names)
+    response_text = analyze_user_actions(action_group_names, model=args.model)
 
     print("User Action Description:")
     print(response_text)
