@@ -1,4 +1,5 @@
 import os
+import argparse
 from openai import OpenAI
 import base64
 import json
@@ -19,6 +20,28 @@ load_dotenv("./py.env")
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 print("OpenAI client initialized.")
+
+import time
+
+def call_with_retry(fn, *args, retries=3, delay=2, **kwargs):
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            last_error = e
+            print(f"  API call failed (attempt {attempt}/{retries}): {e}")
+            if attempt < retries:
+                time.sleep(delay)
+    raise last_error
+
+def parse_action_line(line, line_num):
+    parts = line.strip().split(' ', 1)
+    if len(parts) < 2:
+        print(f"Skipping invalid prompt on line {line_num}: {line.strip()!r}")
+        return None
+    return parts[0], parts[1]
+
 
 def analyze_images(image_dir, txt_file, response_file):
 
@@ -56,16 +79,14 @@ def analyze_images(image_dir, txt_file, response_file):
 
     responses = []
 
-    for prompt in prompts:
+    for line_num, prompt in enumerate(prompts, start=1):
         print(f"Processing prompt: {prompt.strip()}")
 
-        parts = prompt.strip().split(' ', 1)
-        if len(parts) < 2:
-            print(f"Skipping invalid prompt: {prompt.strip()}")
+        parsed = parse_action_line(prompt, line_num)
+        if parsed is None:
             continue
 
-        image_id = parts[0]
-        prompt_text = parts[1]
+        image_id, prompt_text = parsed
 
         print(f"Image ID: {image_id}, Prompt Text: {prompt_text}")
 
@@ -81,7 +102,8 @@ def analyze_images(image_dir, txt_file, response_file):
                 image_bytes = image_file.read()
                 encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
-            response = client.chat.completions.create(
+            response = call_with_retry(
+                client.chat.completions.create,
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": vllm_system_prompt},
@@ -140,7 +162,8 @@ def action_groups(responses):
   ]
   """
 
-  response = client.chat.completions.create(
+  response = call_with_retry(
+    client.chat.completions.create,
     model="gpt-4o-mini",
     messages=[
         {"role": "system", "content": system_prompt},
@@ -163,7 +186,8 @@ def analyze_user_actions(action_group_names):
   system_prompt = "interpet the given actions, what is the user doing? Answer as a paragraph."
 
 
-  response = client.chat.completions.create(
+  response = call_with_retry(
+    client.chat.completions.create,
     model="gpt-4o-mini",
     messages=[
         {"role": "system", "content": system_prompt},
@@ -176,9 +200,15 @@ def analyze_user_actions(action_group_names):
   return response_text
 
 def main():
-    analyze_images(image_dir, txt_file, response_file)
+    parser = argparse.ArgumentParser(description="GUI Action Analyzer")
+    parser.add_argument("--image-dir", default=image_dir, help=f"Directory containing screenshots (default: {image_dir})")
+    parser.add_argument("--txt-file", default=txt_file, help=f"Path to the actions.txt caption file (default: {txt_file})")
+    parser.add_argument("--response-file", default=response_file, help=f"Path to write responses.json (default: {response_file})")
+    args = parser.parse_args()
 
-    extracted_actions = read_json(response_file)
+    analyze_images(args.image_dir, args.txt_file, args.response_file)
+
+    extracted_actions = read_json(args.response_file)
 
     print("Extracted actions from images.")
 
