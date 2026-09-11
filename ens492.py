@@ -188,7 +188,7 @@ def main():
     action_group_names = action_groups(extracted_actions)
 
     # reduce until less than 10 actions remain or quit after trying 10 times
-    while len(action_group_names) > 10 and reduced > 10:
+    while len(action_group_names) > 10 and reduced < 10:
         action_group_names = action_groups(extracted_actions)
         reduced += 1
 
