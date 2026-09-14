@@ -8,83 +8,78 @@ Each screenshot is stored locally alongside a short caption describing the actio
 
 **Screenshots + Action Captions → Per-Action Description → Action Grouping (recursive) → Intent Summary**
 
-### 1. Per-image action extraction 
+### 1. Per-image action extraction
+
 `analyze_images()` reads `images/actions.txt`, where each line pairs an image ID with a short JSON-style caption of the action taken on that screenshot, e.g.:
-  ```
-  1 {"action":"click"}
-  2 {"action":"click"}
-  3 {"action":"click"}
-  ...
-  13 {"action":"click"}
-  ```
-  (entries can also be `{"action":"entry", "argument": "..."}` for typed input, e.g. `{"action":"enter", "argument": "what is the time?"}`)
-  
+
+```
+1 {"action":"click"}
+2 {"action":"click"}
+3 {"action":"click"}
+...
+13 {"action":"click"}
+```
+
+(entries can also be `{"action":"entry", "argument": "..."}` for typed input, e.g. `{"action":"enter", "argument": "what is the time?"}`)
+
 For each line, loads the matching screenshot `images/<image_id>.png` — a screenshot with a bounding box drawn around the GUI element the user interacted with. Screenshots and their captions live together locally in `images/`, so `1.png` pairs with the `1 ...` line, `2.png` with the `2 ...` line, and so on.
 
-  
 Sends the image + the line's caption to `gpt-4o-mini` with a system prompt instructing it to output a structured natural-language description of the action, e.g.:
-  - `click on <GUI element>`
-  - `enter <argument> as <GUI element>`
-  - or, if the target element is ambiguous (e.g. duplicate labels on screen), a context-qualified version: `Within the context of <context>, click on <GUI element>.`
-- Writes all `{image_id, prompt, response}` entries to `output/responses.json`. Example of the intermediate output:
-  ```json
-  [
-      {
-          "image_id": "1",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on Trending"
-      },
-      {
-          "image_id": "2",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on the video titled \"Trabzonspor 0-3 Galatasaray | MAÇ ÖZETİ | Ziraat Türkiye Kupası Final Maçı | 14.05.2025\" in the Trending section on YouTube."
-      },
-      {
-          "image_id": "3",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on the play button"
-      },
-      {
-          "image_id": "4",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on the settings icon"
-      },
-      {
-          "image_id": "5",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on Subtitles/CC (1)"
-      },
-      {
-          "image_id": "6",
-          "prompt": "{\"action\":\"click\"}",
-          "response": "click on \"Turkish (auto-generated)\" as the subtitles/CC options"
-      }
-  ]
-  ```
+
+- `click on <GUI element>`
+- `enter <argument> as <GUI element>`
+- or, if the target element is ambiguous (e.g. duplicate labels on screen), a context-qualified version: `Within the context of <context>, click on <GUI element>.`
+
+Writes all `{image_id, prompt, response}` entries to `output/responses.json`. Example of the intermediate output:
+
+```json
+[
+    {
+        "image_id": "1",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on Trending"
+    },
+    {
+        "image_id": "2",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the video titled \"Trabzonspor 0-3 Galatasaray | MAÇ ÖZETİ | Ziraat Türkiye Kupası Final Maçı | 14.05.2025\" in the Trending section on YouTube."
+    },
+    {
+        "image_id": "3",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the play button"
+    },
+    {
+        "image_id": "4",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the settings icon"
+    },
+    {
+        "image_id": "5",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on Subtitles/CC (1)"
+    },
+    {
+        "image_id": "6",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on \"Turkish (auto-generated)\" as the subtitles/CC options"
+    }
+]
+```
 
 ### 2. Load extracted actions
+
 `read_json()` reads `responses.json` and concatenates every `response` field into one newline-separated string.
 
 ### 3. Group actions into a story
-`action_groups()` ends the concatenated action list to the model, asking it to cluster the actions into logical, continuous groups and name each group using specific details (names, places, dates, counts) pulled from the underlying actions. Subsequently, it parses the model's JSON array response and returns just the group names.
 
-This grouping step runs recursively as long as there are still more than 10 groups, the group names are fed back into the pipeline through `action_groups()` to summarize the summaries until the list is short enough, or up to 10 attempts have been made.
+`action_groups()` sends the concatenated action list to the model, asking it to cluster the actions into logical, continuous groups and name each group using specific details (names, places, dates, counts) pulled from the underlying actions. Subsequently, it parses the model's JSON array response and returns just the group names.
+
+This grouping step runs recursively as long as there are still more than 10 groups; the group names are fed back into the pipeline through `action_groups()` to summarize the summaries until the list is short enough, or up to 10 attempts have been made.
 
 ### 4. Summarize user intent
+
 `analyze_user_actions()` sends the list of action-group names to the model and asks it to interpret, in a paragraph, what the user was doing overall and prints the final summary to the console.
-
-## Requirements
-
-- Python 3.9+
-- An OpenAI API key with access to `gpt-4o-mini` (not required when pointing `--base-url` at a local model server, see [Running a local model](#running-a-local-model))
-- Python packages:
-  ```
-  pip install openai python-dotenv
-  ```
-- Imports used in the script:
-  ```python
-  from openai import OpenAI
-  ```
 
 ## Project Structure
 
@@ -102,24 +97,46 @@ project/
 └── main.py                  # the script itself
 ```
 
+## Requirements
+
+- Python 3.9+
+- An OpenAI API key with access to `gpt-4o-mini` (not required when pointing `--base-url` at a local model server, see [Running a Local Model (Ollama)](#running-a-local-model-ollama))
+- Python packages:
+
+  ```bash
+  pip install openai python-dotenv
+  ```
+
+- Imports used in the script:
+
+  ```python
+  from openai import OpenAI
+  ```
+
 ## Setup
 
 1. Install dependencies:
+
    ```bash
    pip install openai python-dotenv
    ```
+
 2. Create a `py.env` file in the project root:
+
    ```
    OPENAI_API_KEY=your_api_key_here
    ```
+
 3. Populate `images/` with screenshots and a matching `images/actions.txt`, one line per screenshot:
+
    ```
    1 {"action":"click"}
    2 {"action":"click"}
    3 {"action":"enter", "argument": "what is the time?"}
    ...
    ```
-4. An `output/` directory will be created if there isn't one.
+
+4. An `output/` directory will be created automatically if it doesn't exist.
 
 ## Usage
 
@@ -128,13 +145,14 @@ python main.py
 ```
 
 This will:
+
 1. Analyze every image/action pair and save results to `output/responses.json`.
-2. Group the resulting action descriptions recursively re-summarizing until it is short enough.
+2. Group the resulting action descriptions, recursively re-summarizing until the group count is below 10.
 3. Print a paragraph describing the overall user intent and actions.
 
 ## Swapping the Model
 
-The default model is `gpt-4o-mini`, but the model can be configured to a different OpenAI API compatible model:
+The default model is `gpt-4o-mini`, but it can be configured to any OpenAI API-compatible model:
 
 ```bash
 python main.py --model gpt-4o
@@ -142,17 +160,41 @@ python main.py --model gpt-4o
 
 This overrides the `MODEL` constant at the top of `main.py` for every stage.
 
-## Running a Local Model
+## Running a Local Model (Ollama)
 
-The script talks to whatever OpenAI-compatible endpoint the client is pointed at, so it can run fully offline against a local model server (e.g. [Ollama](https://ollama.com)) instead of OpenAI's API:
+The script talks to whatever OpenAI-compatible endpoint the client is pointed at, so the whole pipeline can run fully offline against a local vision-language model served by [Ollama](https://ollama.com) instead of OpenAI's API.
 
-```bash
-python main.py --model qwen3-vl:8b --base-url http://localhost:11434/v1
-```
+### 1. Install and start Ollama
 
-or set the endpoint once via an environment variable instead of passing it every run:
+Download and install Ollama from [ollama.com/download](https://ollama.com/download), make sure the local server is running:
 
 ```bash
-export OPENAI_BASE_URL=http://localhost:11434/v1
-python main.py --model qwen3-vl:8b
+ollama serve
 ```
+
+### 2. Pull a vision-capable model
+
+This pipeline sends images to the model, so it needs a vision-language (VL) model, not a text-only one. Any vision-capable model Ollama supports will work — the example below uses Qwen2.5-VL:
+
+```bash
+ollama pull qwen2.5vl:7b
+```
+
+> ** Going below ~7B parameters is not recommended** as smaller vision models tend to degrade into repetitive output.
+
+### 3. Point the pipeline at Ollama
+
+Pass the local endpoint and model name on each run:
+
+```bash
+python main.py --base-url "http://localhost:11434/v1" --model "qwen2.5vl:7b"
+```
+
+Or set the base URL once as an environment variable so you don't have to repeat it:
+
+```bash
+export OPENAI_BASE_URL="http://localhost:11434/v1"
+python main.py --model "qwen2.5vl:7b"
+```
+
+No `OPENAI_API_KEY` is needed in this mode — Ollama's OpenAI-compatible endpoint doesn't check it, though the client library may still require the environment variable to be set to any non-empty placeholder string.
