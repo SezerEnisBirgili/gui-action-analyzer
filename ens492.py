@@ -4,31 +4,29 @@ from openai import OpenAI
 import base64
 import json
 from dotenv import load_dotenv
+import time
 
 # Every action must be coupled with the associated annotated image.
-# Each image is numbered according to its action.
-image_dir = r"images"
+image_dir = os.path.join("images")
 
-# Each line is an action with a associated image.
-txt_file = r"images\actions.txt"
+# Each line is an action with an associated image.
+txt_file = os.path.join("images", "actions.txt")
 
-# The extracted actions will be here
-response_file = r"output\responses.json"
+# The extracted actions will be saved here
+response_file = os.path.join("output", "responses.json")
 
-# default model
+# Default model
 MODEL = "gpt-4o-mini"
 
-# API endpoint. defaults to OpenAI
-# pass --base-url to point at a local server
+# API endpoint. defaults to OpenAI (pass --base-url to point at local server)
 BASE_URL = os.environ.get("OPENAI_BASE_URL")
 
-# provide a .env file with OPENAI_API_KEY specified in it
+# Provide a .env file with OPENAI_API_KEY specified in it
 load_dotenv("./py.env")
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "not-needed-for-local"), base_url=BASE_URL)
 print(f"OpenAI client initialized. base_url={BASE_URL or '(default)'}")
 
-import time
 
 def call_with_retry(fn, *args, retries=3, delay=2, **kwargs):
     """Retry an OpenAI API call a few times before giving up."""
@@ -43,6 +41,7 @@ def call_with_retry(fn, *args, retries=3, delay=2, **kwargs):
                 time.sleep(delay)
     raise last_error
 
+
 def parse_action_line(line, line_num):
     """Parse one line of actions.txt into (image_id, prompt_text).
     Returns None if the line is malformed, printing which line failed."""
@@ -54,7 +53,6 @@ def parse_action_line(line, line_num):
 
 
 def analyze_images(image_dir, txt_file, response_file, model=MODEL):
-
 
     vllm_system_prompt = """
     You are given a screenshot clearly marking the GUI element that the end-user interacted with by drawing a bounding box around the element and a structural and textual description of the action taken by the end-user.
@@ -70,8 +68,8 @@ def analyze_images(image_dir, txt_file, response_file, model=MODEL):
     Within the context of <context>, enter <argument> as <GUI element>.
 
     else:
-    { “action” : ”click” }
-    { “action” : ”entry”, “argument” : <value entered>}
+    { "action" : "click" }
+    { "action" : "entry", "argument" : <value entered>}
 
     accepted output formats:
 
@@ -141,6 +139,8 @@ def analyze_images(image_dir, txt_file, response_file, model=MODEL):
             continue
 
     try:
+        # Ensure output directory exists before saving
+        os.makedirs(os.path.dirname(response_file), exist_ok=True)
         with open(response_file, "w") as f:
             json.dump(responses, f, indent=4)
         print(f"Responses saved to {response_file}.")
@@ -149,65 +149,59 @@ def analyze_images(image_dir, txt_file, response_file, model=MODEL):
 
     return response_file
 
+
 def read_json(response_file):
+    with open(response_file, 'r', encoding='utf-8') as file:
+        data = json.load(file)
 
-  with open(response_file, 'r', encoding='utf-8') as file:
-      data = json.load(file)
-
-  responses = "\n".join([item["response"] for item in data])
-
-  return responses
+    responses = "\n".join([item["response"] for item in data])
+    return responses
 
 
 def action_groups(responses, model=MODEL):
+    system_prompt = """Separate the following responses into logical continuous action groups.
+In each action group name, combine information from child actions to create a story with the specific information about names, places, dates and counts preserved in the group name.
+The output should be in the following format:
 
-  system_prompt = """Separate the following responses into logical continuous action groups.
-  In each action group name, combine information from child actions to create a story with the specific information about names, places, dates and counts preserved in the group name.
-  The output should be in the following format:
+[
+  {"actionGroup1": "actionGroup1", "actions": [action11, action12, ...]},
+  {"actionGroup2": "actionGroup2", "actions": [action21, action22, ...]},
+  ...
+]
+"""
 
-  [
-    {"actionGroup1": "actionGroup1", "actions": [action11, action12, ...]},
-    {"actionGroup2": "actionGroup2", "actions": [action21, action22, ...]},
-    ...
-  ]
-  """
+    response = call_with_retry(
+        client.chat.completions.create,
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": responses}
+        ]
+    )
 
-  response = call_with_retry(
-    client.chat.completions.create,
-    model=model,
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": responses}
-    ]
-  )
+    response_text = response.choices[0].message.content
+    response_text = response_text.replace("'", "")
 
-  response_text = response.choices[0].message.content
+    action_group_names = [list(group.values())[0] for group in json.loads(response_text)]
+    return action_group_names
 
-  response_text = response_text.replace("'", "")
-
-  action_group_names = [list(group.values())[0] for group in json.loads(response_text)]
-
-  return action_group_names
 
 def analyze_user_actions(action_group_names, model=MODEL):
+    actions = "\n".join(action_group_names)
+    system_prompt = "interpret the given actions, what is the user doing? Answer as a paragraph."
 
-  actions = "\n".join(action_group_names)
+    response = call_with_retry(
+        client.chat.completions.create,
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": actions}
+        ]
+    )
 
-  system_prompt = "interpet the given actions, what is the user doing? Answer as a paragraph."
+    response_text = response.choices[0].message.content
+    return response_text
 
-
-  response = call_with_retry(
-    client.chat.completions.create,
-    model=model,
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": actions}
-    ]
-  )
-
-  response_text = response.choices[0].message.content
-
-  return response_text
 
 def main():
     global client
@@ -227,26 +221,23 @@ def main():
     analyze_images(args.image_dir, args.txt_file, args.response_file, model=args.model)
 
     extracted_actions = read_json(args.response_file)
-
     print("Extracted actions from images.")
 
-
     reduced = 0
-
     action_group_names = action_groups(extracted_actions, model=args.model)
 
-    # reduce until less than 10 actions remain or quit after trying 10 times
+    # Reduce until less than 10 actions remain or quit after trying 10 times
     while len(action_group_names) > 10 and reduced < 10:
         action_group_names = action_groups(extracted_actions, model=args.model)
         reduced += 1
-
 
     print("Actions have been reduced.")
 
     response_text = analyze_user_actions(action_group_names, model=args.model)
 
-    print("User Action Description:")
+    print("\nUser Action Description:")
     print(response_text)
+
 
 if __name__ == "__main__":
     main()

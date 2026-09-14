@@ -2,31 +2,61 @@
     {
         "image_id": "1",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on Trending"
+        "response": "click on \"\u0130stanbul Anadolu (\u0130stanbul An... SAW)\" option"
     },
     {
         "image_id": "2",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on the video titled \"Trabzonspor 0-3 Galatasaray | MA\u00c7 \u00d6ZET\u0130 | Ziraat T\u00fcrkiye Kupas\u0131 Final Ma\u00e7\u0131 | 14.05.2025\" in the Trending section on YouTube."
+        "response": "click on Sabiha G\u00f6k\u00e7en Havaliman\u0131 (SAW) Istanbul Anadolu"
     },
     {
         "image_id": "3",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on the play button"
+        "response": "click on \"Nereye \u0130zmir\" field"
     },
     {
         "image_id": "4",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on the settings icon"
+        "response": "click on \"\u0130zmir Adnan Menderes Havaliman\u0131 (ADB) \u0130zmir\""
     },
     {
         "image_id": "5",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on Subtitles/CC (1)"
+        "response": "click on the \"15 May Per\u015fembe\" date selector."
     },
     {
         "image_id": "6",
         "prompt": "{\"action\":\"click\"}",
-        "response": "click on \"Turkish (auto-generated)\" as the subtitles/CC options"
+        "response": "click on the forward arrow button in the calendar to navigate to June 2025."
+    },
+    {
+        "image_id": "7",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the departure date (11 June 2025) in the calendar."
+    },
+    {
+        "image_id": "8",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the \"D\u00f6n\u00fc\u015f Ekle\" button"
+    },
+    {
+        "image_id": "10",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on the arrow button to navigate to a different month in the calendar."
+    },
+    {
+        "image_id": "11",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on September 2025 in the calendar"
+    },
+    {
+        "image_id": "12",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "click on Yolcular 1 Yolcu"
+    },
+    {
+        "image_id": "13",
+        "prompt": "{\"action\":\"click\"}",
+        "response": "Within the context of changing the passenger count, click on the \"Yeti\u015fkin\" field."
     }
 ]
