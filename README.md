@@ -101,17 +101,6 @@ project/
 
 - Python 3.9+
 - An OpenAI API key with access to `gpt-4o-mini` (not required when pointing `--base-url` at a local model server, see [Running a Local Model (Ollama)](#running-a-local-model-ollama))
-- Python packages:
-
-  ```bash
-  pip install openai python-dotenv
-  ```
-
-- Imports used in the script:
-
-  ```python
-  from openai import OpenAI
-  ```
 
 ## Setup
 
