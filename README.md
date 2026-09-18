@@ -104,19 +104,26 @@ project/
 
 ## Setup
 
-1. Install dependencies:
+1. Clone the repository:
+   
+   ```bash
+   git clone https://github.com/SezerEnisBirgili/gui-action-analyzer.git
+   cd gui-action-analyzer
+   ```
+   
+3. Install dependencies:
 
    ```bash
    pip install openai python-dotenv
    ```
 
-2. Create a `py.env` file in the project root:
+4. Create a `py.env` file in the project root:
 
    ```
    OPENAI_API_KEY=your_api_key_here
    ```
 
-3. Populate `images/` with screenshots and a matching `images/actions.txt`, one line per screenshot:
+5. Populate `images/` with screenshots and a matching `images/actions.txt`, one line per screenshot:
 
    ```
    1 {"action":"click"}
