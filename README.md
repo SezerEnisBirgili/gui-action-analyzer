@@ -168,8 +168,7 @@ This pipeline sends images to the model, so it needs a vision-language (VL) mode
 ```bash
 ollama pull qwen2.5vl:7b
 ```
-
-> ** Going below ~7B parameters is not recommended** as smaller vision models tend to degrade into repetitive output.
+**Going below 7B parameters is not recommended** as smaller vision models tend to degrade into repetitive output.
 
 ### 3. Point the pipeline at Ollama
 
